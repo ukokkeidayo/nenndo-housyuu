@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<base target="_top">
+<meta charset="UTF-8">
+<meta name="theme-color" content="#eef1f5" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1522" media="(prefers-color-scheme: dark)">
+<title>年度報酬 計算ツール</title>
+<style>
+  :root {
+    --bg: #eef1f5;
+    --card-bg: #ffffff;
+    --input-bg: #ffffff;
+    --placeholder: #a3aab5;
+    --title: #1e2b45;
+    --text: #334155;
+    --text-light: #64748b;
+    --border: #dfe3e8;
+    --input-border: #d7dbe2;
+    --accent: #3b82f6;
+    --accent-dark: #1d4ed8;
+    --navy: #1e2b45;
+    --navy-hover: #16213a;
+    --icon-bg: #eef1f5;
+    --icon-hover: #e2e6ec;
+    --danger: #d1493a;
+    --danger-hover: #b83c2f;
+    --result-bg: #f4f6f8;
+    --shadow: 0 10px 40px rgba(30, 43, 69, 0.10);
+    --popover-shadow: 0 12px 32px rgba(30, 43, 69, 0.18);
+    color-scheme: light;
+  }
+
+  /* 端末がダークモードの場合は自動でこちらの配色に切り替わります */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1522;
+      --card-bg: #1a2233;
+      --input-bg: #141b2b;
+      --placeholder: #5b6478;
+      --title: #eef1f6;
+      --text: #cbd5e1;
+      --text-light: #8b96ac;
+      --border: #2b3550;
+      --input-border: #37415e;
+      --accent: #4c8cf5;
+      --accent-dark: #8ab8ff;
+      --navy: #eef1f6;
+      --navy-hover: #d7dce6;
+      --icon-bg: #232d44;
+      --icon-hover: #2c3752;
+      --danger: #e35c4e;
+      --danger-hover: #c9493c;
+      --result-bg: #212b40;
+      --shadow: 0 10px 40px rgba(0, 0, 0, 0.45);
+      --popover-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+      color-scheme: dark;
+    }
+  }
+
+  * { box-sizing: border-box; }
+
+  button, input {
+    font-family: inherit;
+  }
+
+  html {
+    height: 100%;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg);
+    font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", "Noto Sans JP", sans-serif;
+    color: var(--text);
+    overscroll-behavior-y: none;
+    overflow-x: hidden;
+  }
+
+  body {
+    display: flex;
+    justify-content: center;
+    min-height: 100%;
+    min-height: 100dvh;
+    padding: 48px max(16px, env(safe-area-inset-right)) calc(48px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .card {
+    background: var(--card-bg);
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    width: 100%;
+    max-width: 620px;
+    padding: 36px 40px 40px;
+    position: relative;
+  }
+
+  .header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 28px;
+  }
+
+  .header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--title);
+    margin: 0;
+    line-height: 1.4;
+  }
+
+  .header .subtitle {
+    font-size: 13px;
+    color: var(--text-light);
+    margin-top: 6px;
+  }
+
+  .icon-btn {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    border-radius: 12px;
+    background: var(--icon-bg);
+    border: none;
+    color: var(--navy);
+    font-size: 17px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s ease;
+    position: relative;
+    touch-action: manipulation;
+  }
+
+  .icon-btn:hover {
+    background: var(--icon-hover);
+  }
+
+  .field-group {
+    margin-bottom: 22px;
+  }
+
+  .field-label {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--title);
+    margin-bottom: 10px;
+    display: block;
+  }
+
+  .field-row {
+    display: flex;
+    gap: 10px;
+  }
+
+  .field-row input[type="number"] {
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+    padding: 14px 16px;
+    font-size: 16px;
+    border: 1.5px solid var(--input-border);
+    border-radius: 10px;
+    color: var(--text);
+    background-color: var(--input-bg);
+    outline: none;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+    -moz-appearance: textfield;
+  }
+
+  .field-row input[type="number"]::-webkit-outer-spin-button,
+  .field-row input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  .field-row input[type="number"]:focus {
+    border-color: var(--accent);
+  }
+
+  .field-row input::placeholder {
+    color: var(--placeholder);
+  }
+
+  .clear-btn {
+    background: var(--danger);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 0 18px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s ease;
+    touch-action: manipulation;
+  }
+
+  .clear-btn:hover {
+    background: var(--danger-hover);
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 28px 0 20px;
+  }
+
+  .result-label {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--title);
+    margin-bottom: 10px;
+  }
+
+  .result-box {
+    background: var(--result-bg);
+    border-radius: 12px;
+    padding: 22px;
+    min-height: 92px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .result-placeholder {
+    color: var(--text-light);
+    font-size: 14px;
+    text-align: center;
+  }
+
+  .result-score {
+    font-size: 14px;
+    color: var(--text-light);
+  }
+
+  .result-score strong {
+    font-size: 20px;
+    color: var(--title);
+    font-weight: 700;
+    margin-left: 4px;
+  }
+
+  .result-multiplier {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .result-multiplier .label {
+    font-size: 14px;
+    color: var(--text-light);
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 6px 16px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 20px;
+    font-weight: 700;
+    border-radius: 999px;
+  }
+
+  /* ヒントポップオーバー */
+  .popover {
+    display: none;
+    position: absolute;
+    top: 56px;
+    right: 0;
+    width: min(320px, calc(100vw - 64px));
+    max-width: 320px;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: var(--popover-shadow);
+    padding: 20px;
+    z-index: 20;
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text);
+  }
+
+  .popover.open {
+    display: block;
+  }
+
+  .popover-title {
+    font-weight: 700;
+    color: var(--title);
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
+
+  .popover .formula {
+    background: var(--result-bg);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--title);
+    margin-bottom: 16px;
+    line-height: 1.6;
+  }
+
+  .popover table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 12px;
+  }
+
+  .popover td {
+    padding: 4px 0;
+    font-size: 13px;
+    border-bottom: 1px dashed var(--border);
+  }
+
+  .popover td:first-child {
+    color: var(--text-light);
+    white-space: nowrap;
+  }
+
+  .popover td:last-child {
+    text-align: right;
+    font-weight: 700;
+    color: var(--accent-dark);
+  }
+
+  .popover .note {
+    font-size: 12px;
+    color: var(--text-light);
+    background: var(--result-bg);
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+
+  .popover-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: none;
+    border: none;
+    font-size: 15px;
+    color: var(--text-light);
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  @media (max-width: 480px) {
+    .card { padding: 28px 20px 32px; }
+    .field-row { flex-direction: column; }
+    .clear-btn { width: 100%; padding: 12px; }
+
+    /* 小さい画面では位置計算に頼らず、下部固定シートとして表示しはみ出しを防ぎます */
+    .popover {
+      position: fixed;
+      top: auto;
+      left: 16px;
+      right: 16px;
+      bottom: max(16px, env(safe-area-inset-bottom));
+      width: auto;
+      max-width: none;
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+  }
+</style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="header">
+      <div>
+        <h1>年度報酬 計算ツール</h1>
+        <div class="subtitle">年度の実績値から報酬倍率の目安を計算します</div>
+      </div>
+      <div style="position:relative;">
+        <button class="icon-btn" id="hintBtn" aria-label="計算式のヒント">?</button>
+        <div class="popover" id="hintPopover">
+          <button class="popover-close" id="hintClose">✕</button>
+          <div class="popover-title">年度報酬 計算式</div>
+          <div class="formula">
+            (年度キル数 ÷ 300) ＋ (年度損失数 ÷ 25) ＋ (年度建設値 × 5)
+          </div>
+          <div class="popover-title">倍率の目安</div>
+          <table>
+            <tr><td>〜46,500</td><td>5倍以下</td></tr>
+            <tr><td>46,500〜80,000</td><td>6倍</td></tr>
+            <tr><td>80,000〜138,000</td><td>7倍</td></tr>
+            <tr><td>138,000〜205,000</td><td>8倍</td></tr>
+            <tr><td>205,000〜340,000</td><td>9倍</td></tr>
+            <tr><td>340,000〜</td><td>10倍</td></tr>
+          </table>
+          <div class="note">
+            ※ この倍率はあくまで目安です。集計タイミングや端数処理などにより、実際の結果と多少の誤差が生じる場合があります。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label">年度キル数</label>
+      <div class="field-row">
+        <input type="number" id="kills" placeholder="数値を入力" inputmode="numeric" min="0">
+        <button class="clear-btn" data-target="kills">クリア</button>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label">年度損失数</label>
+      <div class="field-row">
+        <input type="number" id="losses" placeholder="数値を入力" inputmode="numeric" min="0">
+        <button class="clear-btn" data-target="losses">クリア</button>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label">年度建設値</label>
+      <div class="field-row">
+        <input type="number" id="construction" placeholder="数値を入力" inputmode="numeric" min="0">
+        <button class="clear-btn" data-target="construction">クリア</button>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="result-label">計算結果</div>
+    <div class="result-box" id="resultBox">
+      <div class="result-placeholder">数値を入力すると自動で計算結果が表示されます</div>
+    </div>
+  </div>
+
+<script>
+  var $ = function(id) { return document.getElementById(id); };
+
+  // クリアボタン
+  document.querySelectorAll('.clear-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      $(btn.dataset.target).value = '';
+      updateResult();
+    });
+  });
+
+  // ヒントポップオーバー
+  var hintBtn = $('hintBtn');
+  var hintPopover = $('hintPopover');
+  hintBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    hintPopover.classList.toggle('open');
+  });
+  $('hintClose').addEventListener('click', function() {
+    hintPopover.classList.remove('open');
+  });
+  document.addEventListener('click', function(e) {
+    if (!hintPopover.contains(e.target) && e.target !== hintBtn) {
+      hintPopover.classList.remove('open');
+    }
+  });
+
+  // 計算処理
+  function getMultiplierLabel(score) {
+    if (score <= 46500) return '5倍以下';
+    if (score <= 80000) return '6倍';
+    if (score <= 138000) return '7倍';
+    if (score <= 205000) return '8倍';
+    if (score <= 340000) return '9倍';
+    return '10倍';
+  }
+
+  function renderResult(score, multiplier) {
+    var formatted = score.toLocaleString('ja-JP', { maximumFractionDigits: 2 });
+    $('resultBox').innerHTML =
+      '<div class="result-score">計算値：<strong>' + formatted + '</strong></div>' +
+      '<div class="result-multiplier"><span class="label">推定倍率：</span><span class="badge">' + multiplier + '</span></div>';
+  }
+
+  function renderError(message) {
+    $('resultBox').innerHTML = '<div class="result-placeholder">' + message + '</div>';
+  }
+
+  function updateResult() {
+    var kills = $('kills').value;
+    var losses = $('losses').value;
+    var construction = $('construction').value;
+
+    if (kills === '' && losses === '' && construction === '') {
+      renderError('数値を入力すると自動で計算結果が表示されます');
+      return;
+    }
+
+    var k = Number(kills) || 0;
+    var l = Number(losses) || 0;
+    var c = Number(construction) || 0;
+
+    if (k < 0 || l < 0 || c < 0) {
+      renderError('マイナスの値は入力できません');
+      return;
+    }
+
+    // 入力のたびにその場で計算(体感速度優先でクライアント側で計算)
+    var score = (k / 300) + (l / 25) + (c * 5);
+    renderResult(score, getMultiplierLabel(score));
+  }
+
+  // 入力欄の変化をリアルタイムに検知して自動計算
+  // input だけでなく、オートフィル・IME確定・貼り付け・スピンボタン操作など
+  // 様々な入力経路を確実に拾えるよう複数イベントを併用します
+  ['kills', 'losses', 'construction'].forEach(function(id) {
+    var el = $(id);
+    ['input', 'change', 'keyup', 'paste', 'compositionend'].forEach(function(evt) {
+      el.addEventListener(evt, updateResult);
+    });
+  });
+
+  // オートフィルなど、イベントが拾えないケースへの保険として
+  // 短い間隔で値の変化を監視するフォールバックも仕込んでおきます
+  (function watchForSilentChanges() {
+    var lastSnapshot = '';
+    setInterval(function() {
+      var snapshot = $('kills').value + '|' + $('losses').value + '|' + $('construction').value;
+      if (snapshot !== lastSnapshot) {
+        lastSnapshot = snapshot;
+        updateResult();
+      }
+    }, 400);
+  })();
+</script>
+
+</body>
+</html>
