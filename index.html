@@ -271,6 +271,49 @@
     border-radius: 999px;
   }
 
+  .next-tier {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--border);
+  }
+
+  .next-tier-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--title);
+    margin-bottom: 8px;
+  }
+
+  .next-tier-value {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-light);
+  }
+
+  .next-tier-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    font-size: 13px;
+    color: var(--text-light);
+    padding: 4px 0;
+  }
+
+  .next-tier-row strong {
+    color: var(--accent-dark);
+    font-weight: 700;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+
+  .next-tier-note {
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--text-light);
+    line-height: 1.5;
+  }
+
   /* ヒントポップオーバー */
   .popover {
     display: none;
@@ -389,7 +432,7 @@
           <button class="popover-close" id="hintClose">✕</button>
           <div class="popover-title">年度報酬 計算式</div>
           <div class="formula">
-            (年度キル数 ÷ 300) ＋ (年度損失数 ÷ 25) ＋ (年度建設値 × 5)
+            (年度キル数 ÷ 300) ＋ (年度損失数 ÷ 25) ＋ 年度建設値
           </div>
           <div class="popover-title">倍率の目安</div>
           <table>
@@ -467,20 +510,65 @@
   });
 
   // 計算処理
-  function getMultiplierLabel(score) {
-    if (score <= 46500) return '5倍以下';
-    if (score <= 80000) return '6倍';
-    if (score <= 138000) return '7倍';
-    if (score <= 205000) return '8倍';
-    if (score <= 340000) return '9倍';
-    return '10倍';
+  // 各ボーダーラインと、そのボーダー以下なら適用される倍率のペア
+  var TIERS = [
+    { max: 46500, label: '5倍以下' },
+    { max: 80000, label: '6倍' },
+    { max: 138000, label: '7倍' },
+    { max: 205000, label: '8倍' },
+    { max: 340000, label: '9倍' }
+  ];
+
+  function getTierInfo(score) {
+    for (var i = 0; i < TIERS.length; i++) {
+      if (score <= TIERS[i].max) {
+        return {
+          label: TIERS[i].label,
+          boundary: TIERS[i].max,
+          nextLabel: TIERS[i + 1] ? TIERS[i + 1].label : '10倍'
+        };
+      }
+    }
+    return { label: '10倍', boundary: null, nextLabel: null };
   }
 
-  function renderResult(score, multiplier) {
+  // ボーダーをちょうど超えるために、その項目単独で最低限必要な整数値を求める
+  function amountToCross(scoreGap, perUnit) {
+    return Math.floor(scoreGap * perUnit) + 1;
+  }
+
+  function renderResult(score, k, l, c) {
     var formatted = score.toLocaleString('ja-JP', { maximumFractionDigits: 2 });
+    var tier = getTierInfo(score);
+
+    var nextTierHtml;
+    if (tier.boundary === null) {
+      // すでに最大倍率のため、ハイフンで「これ以上先はない」ことを表す
+      nextTierHtml =
+        '<div class="next-tier">' +
+          '<div class="next-tier-title">次の倍率まで</div>' +
+          '<div class="next-tier-value">ー</div>' +
+        '</div>';
+    } else {
+      var scoreGap = tier.boundary - score;
+      var killsNeeded = amountToCross(scoreGap, 300);
+      var lossesNeeded = amountToCross(scoreGap, 25);
+      var constructionNeeded = amountToCross(scoreGap, 1);
+
+      nextTierHtml =
+        '<div class="next-tier">' +
+          '<div class="next-tier-title">次の倍率(' + tier.nextLabel + ')まで</div>' +
+          '<div class="next-tier-row"><span>キル数だけで到達するなら</span><strong>+' + killsNeeded.toLocaleString('ja-JP') + '</strong></div>' +
+          '<div class="next-tier-row"><span>損失数だけで到達するなら</span><strong>+' + lossesNeeded.toLocaleString('ja-JP') + '</strong></div>' +
+          '<div class="next-tier-row"><span>建設値だけで到達するなら</span><strong>+' + constructionNeeded.toLocaleString('ja-JP') + '</strong></div>' +
+          '<div class="next-tier-note">※ 他の2項目は今の入力値のまま変えなかった場合の目安です</div>' +
+        '</div>';
+    }
+
     $('resultBox').innerHTML =
       '<div class="result-score">計算値：<strong>' + formatted + '</strong></div>' +
-      '<div class="result-multiplier"><span class="label">推定倍率：</span><span class="badge">' + multiplier + '</span></div>';
+      '<div class="result-multiplier"><span class="label">推定倍率：</span><span class="badge">' + tier.label + '</span></div>' +
+      nextTierHtml;
   }
 
   function renderError(message) {
@@ -507,8 +595,8 @@
     }
 
     // 入力のたびにその場で計算(体感速度優先でクライアント側で計算)
-    var score = (k / 300) + (l / 25) + (c * 5);
-    renderResult(score, getMultiplierLabel(score));
+    var score = (k / 300) + (l / 25) + c;
+    renderResult(score, k, l, c);
   }
 
   // 入力欄の変化をリアルタイムに検知して自動計算
