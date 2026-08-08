@@ -76,7 +76,6 @@
     background-color: var(--bg);
     font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", "Noto Sans JP", sans-serif;
     color: var(--text);
-    overscroll-behavior-y: none;
     overflow-x: hidden;
   }
 
@@ -557,10 +556,10 @@
 
       nextTierHtml =
         '<div class="next-tier">' +
-          '<div class="next-tier-title">次の倍率(' + tier.nextLabel + ')まで</div>' +
-          '<div class="next-tier-row"><span>キル数だけで到達するなら</span><strong>+' + killsNeeded.toLocaleString('ja-JP') + '</strong></div>' +
-          '<div class="next-tier-row"><span>損失数だけで到達するなら</span><strong>+' + lossesNeeded.toLocaleString('ja-JP') + '</strong></div>' +
-          '<div class="next-tier-row"><span>建設値だけで到達するなら</span><strong>+' + constructionNeeded.toLocaleString('ja-JP') + '</strong></div>' +
+          '<div class="next-tier-title">' + tier.nextLabel + 'まで</div>' +
+          '<div class="next-tier-row"><span>キル数のみなら</span><strong>+' + killsNeeded.toLocaleString('ja-JP') + '</strong></div>' +
+          '<div class="next-tier-row"><span>損失数のみなら</span><strong>+' + lossesNeeded.toLocaleString('ja-JP') + '</strong></div>' +
+          '<div class="next-tier-row"><span>建設値のみなら</span><strong>+' + constructionNeeded.toLocaleString('ja-JP') + '</strong></div>' +
           '<div class="next-tier-note">※ 他の2項目は今の入力値のまま変えなかった場合の目安です</div>' +
         '</div>';
     }
