@@ -436,11 +436,12 @@
           <div class="popover-title">倍率の目安</div>
           <table>
             <tr><td>〜46,500</td><td>5倍以下</td></tr>
-            <tr><td>46,500〜80,000</td><td>6倍</td></tr>
-            <tr><td>80,000〜138,000</td><td>7倍</td></tr>
-            <tr><td>138,000〜205,000</td><td>8倍</td></tr>
-            <tr><td>205,000〜340,000</td><td>9倍</td></tr>
-            <tr><td>340,000〜</td><td>10倍</td></tr>
+            <tr><td>46,500〜80,000</td><td>5倍</td></tr>
+            <tr><td>80,000〜138,000</td><td>6倍</td></tr>
+            <tr><td>138,000〜205,000</td><td>7倍</td></tr>
+            <tr><td>205,000〜340,000</td><td>8倍</td></tr>
+            <tr><td>340,000〜700,000</td><td>9倍</td></tr>
+            <tr><td>700,000〜</td><td>10倍</td></tr>
           </table>
           <div class="note">
             ※ この倍率はあくまで目安です。集計タイミングや端数処理などにより、実際の結果と多少の誤差が生じる場合があります。
@@ -512,10 +513,11 @@
   // 各ボーダーラインと、そのボーダー以下なら適用される倍率のペア
   var TIERS = [
     { max: 46500, label: '5倍以下' },
-    { max: 80000, label: '6倍' },
-    { max: 138000, label: '7倍' },
-    { max: 205000, label: '8倍' },
-    { max: 340000, label: '9倍' }
+    { max: 80000, label: '5倍' },
+    { max: 138000, label: '6倍' },
+    { max: 205000, label: '7倍' },
+    { max: 340000, label: '8倍' },
+    { max: 700000, label: '9倍' }
   ];
 
   function getTierInfo(score) {
